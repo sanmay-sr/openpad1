@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { cn } from "@/lib/utils";
 import { animations } from "@/utils/animations";
@@ -64,19 +63,19 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({ className }) => {
   return (
     <div className={cn("w-full max-w-3xl mx-auto", className)}>
       <div className={cn("editor-container", animations.fadeIn())}>
-        <div className="p-6">
+        <div className="p-3 md:p-6">
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full text-2xl font-semibold bg-transparent border-none outline-none mb-4 placeholder:text-muted-foreground/70"
+            className="w-full text-xl md:text-2xl font-semibold bg-transparent border-none outline-none mb-3 md:mb-4 placeholder:text-muted-foreground/70"
             placeholder="Untitled Note"
           />
           
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            className="note-editor min-h-[200px]"
+            className="note-editor min-h-[150px] md:min-h-[200px]"
             placeholder="Start typing your note here..."
           />
           
@@ -92,61 +91,57 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({ className }) => {
           ))}
         </div>
         
-        <div className="flex flex-wrap items-center justify-between p-4 border-t border-border">
-          <div className="flex items-center gap-3 mb-3 sm:mb-0">
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2"
-              onClick={addCodeSnippet}
-            >
-              <Code className="h-4 w-4" />
-              <span>Add Code</span>
-            </Button>
-          </div>
+        <div className="flex flex-col md:flex-row items-stretch gap-3 p-3 md:p-4 border-t border-border">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={addCodeSnippet}
+          >
+            <Code className="h-4 w-4" />
+            <span>Add Code</span>
+          </Button>
           
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
-            <div className="flex-1 sm:w-64">
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">
-                  openpad.com/
-                </span>
-                <input
-                  type="text"
-                  value={customUrl}
-                  onChange={(e) => setCustomUrl(e.target.value.replace(/\s+/g, "-").toLowerCase())}
-                  className="w-full pl-28 pr-3 py-2 rounded-md border border-input bg-transparent text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                  placeholder="custom-url"
-                />
-              </div>
+          <div className="flex flex-col md:flex-row items-stretch gap-3 w-full md:w-auto md:ml-auto">
+            <div className="relative w-full md:w-64">
+              <span className="absolute inset-y-0 left-0 flex items-center pl-2 text-xs md:text-sm text-muted-foreground">
+                openpad.com/
+              </span>
+              <input
+                type="text"
+                value={customUrl}
+                onChange={(e) => setCustomUrl(e.target.value.replace(/\s+/g, "-").toLowerCase())}
+                className="w-full pl-24 md:pl-28 pr-3 py-2 text-sm rounded-md border border-input bg-transparent focus:outline-none focus:ring-1 focus:ring-primary"
+                placeholder="custom-url"
+              />
             </div>
             
-            <div className="flex items-center gap-3">
+            <div className="flex gap-2">
               <Button
                 variant="secondary"
                 size="sm"
-                className="gap-2 sm:flex-grow-0 flex-1"
+                className="flex-1"
                 onClick={handleShare}
               >
-                <Share className="h-4 w-4" />
-                <span>Share</span>
+                <Share className="h-4 w-4 md:mr-2" />
+                <span className="hidden md:inline">Share</span>
               </Button>
               
               <Button
                 variant="default"
                 size="sm"
-                className="gap-2 sm:flex-grow-0 flex-1"
+                className="flex-1"
                 onClick={handleSave}
               >
-                <Save className="h-4 w-4" />
-                <span>Save</span>
+                <Save className="h-4 w-4 md:mr-2" />
+                <span className="hidden md:inline">Save</span>
               </Button>
             </div>
           </div>
         </div>
       </div>
       
-      <div className={cn("mt-4 text-sm text-muted-foreground text-center", animations.fadeIn({ delay: 0.2 }))}>
+      <div className={cn("mt-3 md:mt-4 text-xs md:text-sm text-muted-foreground text-center", animations.fadeIn({ delay: 0.2 }))}>
         <p>Notes are public by default and will expire after 30 days.</p>
         <p className="mt-1">
           <button className="text-primary hover:underline">

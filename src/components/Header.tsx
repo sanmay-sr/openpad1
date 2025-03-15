@@ -1,16 +1,18 @@
-
 import React from "react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { animations } from "@/utils/animations";
 import { Button } from "@/components/Button";
-import { FileText, Github, User } from "lucide-react";
+import { FileText, User, Moon, Sun } from "lucide-react";
+import { useTheme } from "./ThemeProvider";
 
 interface HeaderProps {
   className?: string;
 }
 
 export const Header: React.FC<HeaderProps> = ({ className }) => {
+  const { theme, toggleTheme } = useTheme();
+
   return (
     <header 
       className={cn(
@@ -31,14 +33,18 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
       </div>
       
       <div className={cn("flex items-center gap-3", animations.fadeIn({ delay: 0.1 }))}>
-        <a 
-          href="https://github.com" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="text-muted-foreground hover:text-foreground transition-colors duration-200"
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={toggleTheme}
+          className="w-9 px-0"
         >
-          <Github className="h-5 w-5" />
-        </a>
+          {theme === 'light' ? (
+            <Moon className="h-4 w-4" />
+          ) : (
+            <Sun className="h-4 w-4" />
+          )}
+        </Button>
         
         <Button 
           variant="outline" 
