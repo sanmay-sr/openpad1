@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+
+import React, { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { animations } from "@/utils/animations";
 import { Button } from "@/components/Button";
 import { CodeBox } from "@/components/CodeBox";
-import { Code, Save, Share } from "lucide-react";
+import { Code, Save, Share, Plus } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface NoteEditorProps {
   className?: string;
@@ -20,6 +22,17 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({ className }) => {
   const [content, setContent] = useState("");
   const [codeSnippets, setCodeSnippets] = useState<CodeSnippet[]>([]);
   const [customUrl, setCustomUrl] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const isMobile = useIsMobile();
+  
+  // Auto-resize textarea
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = `${Math.max(textarea.scrollHeight, isMobile ? 120 : 150)}px`;
+    }
+  }, [content, isMobile]);
   
   const generateId = () => Math.random().toString(36).substr(2, 9);
   
@@ -68,14 +81,15 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({ className }) => {
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full text-xl md:text-2xl font-semibold bg-transparent border-none outline-none mb-3 md:mb-4 placeholder:text-muted-foreground/70"
+            className="w-full text-lg md:text-2xl font-semibold bg-transparent border-none outline-none mb-3 placeholder:text-muted-foreground/70"
             placeholder="Untitled Note"
           />
           
           <textarea
+            ref={textareaRef}
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            className="note-editor min-h-[150px] md:min-h-[200px]"
+            className="note-editor min-h-[120px] md:min-h-[150px]"
             placeholder="Start typing your note here..."
           />
           
@@ -86,12 +100,12 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({ className }) => {
               language={snippet.language}
               onContentChange={(newContent) => updateCodeSnippet(snippet.id, newContent)}
               onRemove={() => removeCodeSnippet(snippet.id)}
-              className={animations.scaleIn({ delay: 0.1 + index * 0.05 })}
+              className={cn("mt-3", animations.scaleIn({ delay: 0.1 + index * 0.05 }))}
             />
           ))}
         </div>
         
-        <div className="flex flex-col md:flex-row items-stretch gap-3 p-3 md:p-4 border-t border-border">
+        <div className="flex flex-col sm:flex-row items-stretch gap-3 p-3 md:p-4 border-t border-border">
           <Button
             variant="outline"
             size="sm"
@@ -102,19 +116,21 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({ className }) => {
             <span>Add Code</span>
           </Button>
           
-          <div className="flex flex-col md:flex-row items-stretch gap-3 w-full md:w-auto md:ml-auto">
-            <div className="relative w-full md:w-64">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-2 text-xs md:text-sm text-muted-foreground">
-                openpad.com/
-              </span>
-              <input
-                type="text"
-                value={customUrl}
-                onChange={(e) => setCustomUrl(e.target.value.replace(/\s+/g, "-").toLowerCase())}
-                className="w-full pl-24 md:pl-28 pr-3 py-2 text-sm rounded-md border border-input bg-transparent focus:outline-none focus:ring-1 focus:ring-primary"
-                placeholder="custom-url"
-              />
-            </div>
+          <div className="flex flex-col sm:flex-row items-stretch gap-3 w-full sm:w-auto sm:ml-auto">
+            {!isMobile && (
+              <div className="relative w-full sm:w-56">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-2 text-xs text-muted-foreground">
+                  openpad.com/
+                </span>
+                <input
+                  type="text"
+                  value={customUrl}
+                  onChange={(e) => setCustomUrl(e.target.value.replace(/\s+/g, "-").toLowerCase())}
+                  className="w-full pl-24 pr-3 py-2 text-sm rounded-md border border-input bg-transparent focus:outline-none focus:ring-1 focus:ring-primary"
+                  placeholder="custom-url"
+                />
+              </div>
+            )}
             
             <div className="flex gap-2">
               <Button
@@ -123,8 +139,8 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({ className }) => {
                 className="flex-1"
                 onClick={handleShare}
               >
-                <Share className="h-4 w-4 md:mr-2" />
-                <span className="hidden md:inline">Share</span>
+                <Share className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Share</span>
               </Button>
               
               <Button
@@ -133,23 +149,25 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({ className }) => {
                 className="flex-1"
                 onClick={handleSave}
               >
-                <Save className="h-4 w-4 md:mr-2" />
-                <span className="hidden md:inline">Save</span>
+                <Save className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Save</span>
               </Button>
             </div>
           </div>
         </div>
       </div>
       
-      <div className={cn("mt-3 md:mt-4 text-xs md:text-sm text-muted-foreground text-center", animations.fadeIn({ delay: 0.2 }))}>
-        <p>Notes are public by default and will expire after 30 days.</p>
-        <p className="mt-1">
-          <button className="text-primary hover:underline">
-            Sign in
-          </button>{" "}
-          to reserve custom URLs and secure your notes.
-        </p>
-      </div>
+      {!isMobile && (
+        <div className={cn("mt-3 text-xs md:text-sm text-muted-foreground text-center", animations.fadeIn({ delay: 0.2 }))}>
+          <p>Notes are public by default and will expire after 30 days.</p>
+          <p className="mt-1">
+            <button className="text-primary hover:underline">
+              Sign in
+            </button>{" "}
+            to reserve custom URLs and secure your notes.
+          </p>
+        </div>
+      )}
     </div>
   );
 };

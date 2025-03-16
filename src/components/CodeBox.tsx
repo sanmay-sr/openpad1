@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { animations } from "@/utils/animations";
@@ -5,18 +6,17 @@ import { Button } from "@/components/Button";
 import { Check, Clipboard, Code, X } from "lucide-react";
 import Prism from "prismjs";
 import { useTheme } from "@/components/ThemeProvider";
-// Import both themes
-import "prismjs/themes/prism-tomorrow.css"; // Dark theme
-import "prismjs/themes/prism-solarizedlight.css"; // Light theme
-// Import the theme and languages you want to support
+import "prismjs/themes/prism.css";
+import "prismjs/themes/prism-tomorrow.css";
+import "prismjs/themes/prism-solarizedlight.css";
 import "prismjs/components/prism-typescript";
 import "prismjs/components/prism-javascript";
 import "prismjs/components/prism-python";
 import "prismjs/components/prism-jsx";
-// ... add more language imports as needed
-
-// Import base Prism styles
-import "prismjs/themes/prism.css";
+import "prismjs/components/prism-bash";
+import "prismjs/components/prism-css";
+import "prismjs/components/prism-json";
+import "prismjs/components/prism-markdown";
 
 interface CodeBoxProps {
   content: string;
@@ -37,15 +37,30 @@ export const CodeBox: React.FC<CodeBoxProps> = ({
   const [copied, setCopied] = useState(false);
   const [currentLanguage, setCurrentLanguage] = useState(language);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const preRef = useRef<HTMLPreElement>(null);
   
   // Auto-resize textarea
   useEffect(() => {
     const textarea = textareaRef.current;
-    if (textarea) {
-      textarea.style.height = 'auto';
-      textarea.style.height = `${textarea.scrollHeight}px`;
+    const pre = preRef.current;
+    
+    if (textarea && pre) {
+      // Set textarea height to match pre element height
+      const preHeight = pre.scrollHeight;
+      textarea.style.height = `${preHeight + 16}px`; // Add padding
+      
+      // Minimum height
+      if (preHeight < 60) {
+        textarea.style.height = "60px";
+      }
+      
+      // Maximum height (with scrolling)
+      if (preHeight > 500) {
+        textarea.style.height = "500px";
+        textarea.style.overflowY = "auto";
+      }
     }
-  }, [content]);
+  }, [content, currentLanguage]);
 
   // Syntax highlighting
   useEffect(() => {
@@ -60,18 +75,11 @@ export const CodeBox: React.FC<CodeBoxProps> = ({
     { value: "python", label: "Python" },
     { value: "java", label: "Java" },
     { value: "csharp", label: "C#" },
-    { value: "cpp", label: "C++" },
-    { value: "go", label: "Go" },
-    { value: "rust", label: "Rust" },
     { value: "php", label: "PHP" },
-    { value: "ruby", label: "Ruby" },
-    { value: "swift", label: "Swift" },
-    { value: "kotlin", label: "Kotlin" },
     { value: "html", label: "HTML" },
     { value: "css", label: "CSS" },
     { value: "sql", label: "SQL" },
     { value: "json", label: "JSON" },
-    { value: "yaml", label: "YAML" },
     { value: "markdown", label: "Markdown" },
     { value: "bash", label: "Bash" },
     { value: "plaintext", label: "Plain Text" },
@@ -87,7 +95,7 @@ export const CodeBox: React.FC<CodeBoxProps> = ({
       )}
     >
       <div className={cn(
-        "code-box-header flex items-center justify-between p-2",
+        "code-box-header flex items-center justify-between p-2 px-3",
         theme === 'light' ? 'bg-gray-100' : 'bg-gray-800'
       )}>
         <div className="flex items-center gap-3">
@@ -97,7 +105,7 @@ export const CodeBox: React.FC<CodeBoxProps> = ({
             value={currentLanguage}
             onChange={(e) => setCurrentLanguage(e.target.value)}
             className={cn(
-              "text-sm focus:outline-none focus:ring-1 focus:ring-primary/20 rounded px-1 py-0.5",
+              "text-xs md:text-sm focus:outline-none focus:ring-1 focus:ring-primary/20 rounded px-1 py-0.5",
               theme === 'light' 
                 ? 'bg-white text-gray-800 border-gray-200' 
                 : 'bg-gray-700 text-gray-200 border-gray-600'
@@ -152,8 +160,7 @@ export const CodeBox: React.FC<CodeBoxProps> = ({
             onContentChange(e.target.value);
           }}
           className={cn(
-            "w-full px-4 py-3 font-mono text-sm outline-none resize-none overflow-hidden",
-            "min-h-[60px] max-h-[600px]",
+            "w-full px-4 py-3 font-mono text-sm outline-none resize-none",
             theme === 'light' 
               ? 'bg-white text-gray-900' 
               : 'bg-gray-900 text-gray-100'
@@ -162,8 +169,9 @@ export const CodeBox: React.FC<CodeBoxProps> = ({
           spellCheck={false}
         />
         <pre 
+          ref={preRef}
           className={cn(
-            "w-full px-4 py-3 m-0 font-mono text-sm overflow-hidden absolute top-0 left-0 pointer-events-none",
+            "w-full px-4 py-3 m-0 font-mono text-sm whitespace-pre absolute top-0 left-0 pointer-events-none",
             theme === 'light' ? 'bg-white' : 'bg-gray-900'
           )}
           aria-hidden="true"

@@ -1,85 +1,95 @@
+
 /* Base styles */
 .code-box {
   position: relative;
+  transition: all 0.2s ease;
 }
 
 .code-box textarea {
   font-family: 'JetBrains Mono', monospace;
   line-height: 1.5;
   tab-size: 2;
+  white-space: pre;
+  overflow-wrap: normal;
+  overflow-x: auto;
 }
 
 .code-box pre {
-  margin: 0;
-  padding: 0;
   font-family: 'JetBrains Mono', monospace;
   line-height: 1.5;
   tab-size: 2;
+  white-space: pre;
+  overflow-wrap: normal;
+  overflow-x: auto;
 }
 
 .code-box pre code {
   font-family: inherit;
 }
 
-/* Light theme colors */
+/* Light theme */
 .light-code {
-  --code-bg: white;
-  --code-color: #383a42;
+  --code-bg: #ffffff;
+  --code-fg: #383a42;
+  --code-comment: #a0a1a7;
+  --code-string: #50a14f;
+  --code-number: #c18401;
+  --code-keyword: #a626a4;
+  --code-function: #4078f2;
+  --code-operator: #383a42;
+  --code-class: #c18401;
+  --code-property: #383a42;
 }
 
-.light-code .token.comment { color: #a0a1a7 !important; }
-.light-code .token.string { color: #50a14f !important; }
-.light-code .token.number { color: #c18401 !important; }
-.light-code .token.keyword { color: #a626a4 !important; }
-.light-code .token.function { color: #4078f2 !important; }
-.light-code .token.operator { color: #383a42 !important; }
-.light-code .token.class-name { color: #c18401 !important; }
-.light-code .token.property { color: #383a42 !important; }
+.light-code .token.comment { color: var(--code-comment) !important; }
+.light-code .token.string { color: var(--code-string) !important; }
+.light-code .token.number { color: var(--code-number) !important; }
+.light-code .token.keyword { color: var(--code-keyword) !important; }
+.light-code .token.function { color: var(--code-function) !important; }
+.light-code .token.operator { color: var(--code-operator) !important; }
+.light-code .token.class-name { color: var(--code-class) !important; }
+.light-code .token.property { color: var(--code-property) !important; }
 
-/* Dark theme colors */
+/* Dark theme */
 .dark-code {
   --code-bg: #1E1E1E;
-  --code-color: #d4d4d4;
+  --code-fg: #d4d4d4;
+  --code-comment: #6A9955;
+  --code-string: #CE9178;
+  --code-number: #B5CEA8;
+  --code-keyword: #569CD6;
+  --code-function: #DCDCAA;
+  --code-operator: #D4D4D4;
+  --code-class: #4EC9B0;
+  --code-property: #9CDCFE;
 }
 
-.dark-code .token.comment { color: #6A9955 !important; }
-.dark-code .token.string { color: #CE9178 !important; }
-.dark-code .token.number { color: #B5CEA8 !important; }
-.dark-code .token.keyword { color: #569CD6 !important; }
-.dark-code .token.function { color: #DCDCAA !important; }
-.dark-code .token.operator { color: #D4D4D4 !important; }
-.dark-code .token.class-name { color: #4EC9B0 !important; }
-.dark-code .token.property { color: #9CDCFE !important; }
+.dark-code .token.comment { color: var(--code-comment) !important; }
+.dark-code .token.string { color: var(--code-string) !important; }
+.dark-code .token.number { color: var(--code-number) !important; }
+.dark-code .token.keyword { color: var(--code-keyword) !important; }
+.dark-code .token.function { color: var(--code-function) !important; }
+.dark-code .token.operator { color: var(--code-operator) !important; }
+.dark-code .token.class-name { color: var(--code-class) !important; }
+.dark-code .token.property { color: var(--code-property) !important; }
 
-/* Adjust select element colors for both themes */
-.light-code select {
-  background: #fdf6e3;
-  color: #657b83;
-}
-
-.dark-code select {
-  background: #1E1E1E;
-  color: #D4D4D4;
-}
-
-/* Cursor-like theme colors */
-.code-box {
-  background: #1E1E1E !important;
-  transition: background-color 0.2s ease;
-}
-
-.token.comment { color: #6A9955; }
-.token.string { color: #CE9178; }
-.token.number { color: #B5CEA8; }
-.token.keyword { color: #569CD6; }
-.token.function { color: #DCDCAA; }
-.token.operator { color: #D4D4D4; }
-.token.class-name { color: #4EC9B0; }
-.token.property { color: #9CDCFE; }
-
-/* Ensure smooth transitions */
+/* Transitions */
 .code-box,
 .code-box pre,
-.code-box code {
+.code-box code,
+.code-box textarea {
   transition: background-color 0.2s ease, color 0.2s ease;
-} 
+}
+
+/* Mobile optimization */
+@media (max-width: 640px) {
+  .code-box textarea,
+  .code-box pre {
+    font-size: 12px;
+    padding: 8px;
+  }
+  
+  .code-box-header {
+    padding: 4px 8px;
+  }
+}
