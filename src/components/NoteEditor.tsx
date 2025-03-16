@@ -27,10 +27,9 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
   const [content, setContent] = useState("");
   const [codeSnippets, setCodeSnippets] = useState<CodeSnippet[]>([]);
   const [customUrl, setCustomUrl] = useState("");
-  const [urlType, setUrlType] = useState<"random" | "custom">("random");
   const [isReserved, setIsReserved] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(true); // Always show custom URL field
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isMobile = useIsMobile();
   
@@ -94,6 +93,11 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
       return;
     }
     
+    if (!customUrl.trim()) {
+      toast.error("Please provide a custom URL for your note");
+      return;
+    }
+    
     try {
       setIsSubmitting(true);
       
@@ -104,8 +108,8 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
         codeSnippets
       );
       
-      // Determine URL to use
-      const urlToUse = urlType === "custom" && customUrl.trim() ? customUrl.trim() : null;
+      // Custom URL is now required
+      const urlToUse = customUrl.trim();
       
       // Determine if note should be reserved
       const shouldReserve = isReserved && isAuthenticated;
@@ -124,6 +128,9 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
           : "Note created successfully!"
       );
       
+      // Display the URL where the note can be accessed
+      toast.info(`Your note is available at: ${window.location.origin}/${result.url}`);
+      
       // Call onSave callback if provided
       if (onSave) {
         onSave(result.url);
@@ -135,7 +142,6 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
         setContent("");
         setCodeSnippets([]);
         setCustomUrl("");
-        setUrlType("random");
         setIsReserved(false);
       }
       
@@ -149,10 +155,6 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
   const handleShare = () => {
     // This would be implemented to share the current editor state
     toast.info("Save the note first to get a shareable link");
-  };
-  
-  const toggleAdvancedOptions = () => {
-    setShowAdvanced(!showAdvanced);
   };
   
   return (
@@ -199,76 +201,44 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
               <Code className="h-4 w-4" />
               <span>Add Code</span>
             </Button>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2"
-              onClick={toggleAdvancedOptions}
-            >
-              <Plus className="h-4 w-4" />
-              <span>Options</span>
-            </Button>
           </div>
           
-          {showAdvanced && (
-            <div className={cn("space-y-3 pt-2", animations.slideDown())}>
-              <div>
-                <label className="block text-sm font-medium mb-1">URL Type</label>
-                <Select 
-                  value={urlType}
-                  onValueChange={(value) => setUrlType(value as "random" | "custom")}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select URL type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem value="random">Random URL (anonymous)</SelectItem>
-                      <SelectItem value="custom">Custom URL</SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              {urlType === "custom" && (
-                <div>
-                  <label className="block text-sm font-medium mb-1">Custom URL</label>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-0 flex items-center pl-2 text-xs text-muted-foreground">
-                      openpad.com/
-                    </span>
-                    <input
-                      type="text"
-                      value={customUrl}
-                      onChange={(e) => setCustomUrl(e.target.value.replace(/\s+/g, "-").toLowerCase())}
-                      className="w-full pl-24 pr-3 py-2 text-sm rounded-md border border-input bg-transparent focus:outline-none focus:ring-1 focus:ring-primary"
-                      placeholder="my-custom-url"
-                    />
-                  </div>
-                </div>
-              )}
-              
-              {isAuthenticated && (
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="reserve-url"
-                    checked={isReserved}
-                    onChange={(e) => setIsReserved(e.target.checked)}
-                    disabled={!canReserveUrl()}
-                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                  />
-                  <label htmlFor="reserve-url" className="ml-2 block text-sm">
-                    Reserve this URL (only you can edit)
-                    {!canReserveUrl() && (
-                      <span className="text-yellow-500 ml-1">
-                        (3 weekly limit reached)
-                      </span>
-                    )}
-                  </label>
-                </div>
-              )}
+          {/* Custom URL field - always shown now */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Custom URL (required)</label>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 flex items-center pl-2 text-xs text-muted-foreground">
+                {window.location.origin}/
+              </span>
+              <input
+                type="text"
+                value={customUrl}
+                onChange={(e) => setCustomUrl(e.target.value.replace(/\s+/g, "-").toLowerCase())}
+                className="w-full pl-24 pr-3 py-2 text-sm rounded-md border border-input bg-transparent focus:outline-none focus:ring-1 focus:ring-primary"
+                placeholder="my-custom-url"
+                required
+              />
+            </div>
+          </div>
+          
+          {isAuthenticated && (
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="reserve-url"
+                checked={isReserved}
+                onChange={(e) => setIsReserved(e.target.checked)}
+                disabled={!canReserveUrl()}
+                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+              />
+              <label htmlFor="reserve-url" className="ml-2 block text-sm">
+                Reserve this URL (only you can edit)
+                {!canReserveUrl() && (
+                  <span className="text-yellow-500 ml-1">
+                    (3 weekly limit reached)
+                  </span>
+                )}
+              </label>
             </div>
           )}
           
@@ -301,7 +271,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
       
       {!isMobile && (
         <div className={cn("mt-3 text-xs md:text-sm text-muted-foreground text-center", animations.fadeIn({ delay: 0.2 }))}>
-          <p>Notes are public by default and will expire after 30 days.</p>
+          <p>Notes will expire after 30 days. Your note will be available at: {customUrl ? `${window.location.origin}/${customUrl}` : '[custom-url]'}</p>
           {!isAuthenticated && (
             <p className="mt-1">
               <a href="/auth" className="text-primary hover:underline">
@@ -315,3 +285,4 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
     </div>
   );
 };
+

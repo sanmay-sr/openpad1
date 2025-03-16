@@ -34,13 +34,17 @@ interface CreateNoteResponse {
 
 export const createNote = async (
   content: string,
-  customUrl: string | null = null,
+  customUrl: string, // Now required
   isReserved: boolean = false
 ): Promise<{ url: string; error?: string }> => {
   try {
+    if (!customUrl || customUrl.trim() === '') {
+      return { url: '', error: 'Custom URL is required' };
+    }
+
     const { data, error } = await supabase.rpc('create_note', {
       p_content: content,
-      p_custom_url: customUrl,
+      p_custom_url: customUrl.trim(),
       p_is_reserved: isReserved
     });
 
