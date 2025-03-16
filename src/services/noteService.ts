@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { Database } from "@/integrations/supabase/types";
 
 export interface Note {
   id: string;
@@ -26,6 +27,11 @@ export interface CodeSnippet {
   language: string;
 }
 
+interface CreateNoteResponse {
+  url: string;
+  error?: string;
+}
+
 export const createNote = async (
   content: string,
   customUrl: string | null = null,
@@ -40,11 +46,15 @@ export const createNote = async (
 
     if (error) throw error;
     
-    if (data?.error) {
-      return { url: '', error: data.error };
+    if (data && typeof data === 'object' && 'error' in data) {
+      return { url: '', error: data.error as string };
     }
     
-    return { url: data.url };
+    if (data && typeof data === 'object' && 'url' in data) {
+      return { url: data.url as string };
+    }
+    
+    return { url: '', error: 'Unexpected response format' };
   } catch (error: any) {
     console.error('Error creating note:', error);
     return { url: '', error: error.message };
@@ -60,7 +70,7 @@ export const getNote = async (url: string): Promise<Note | null> => {
       .maybeSingle();
 
     if (error) throw error;
-    return data;
+    return data as Note;
   } catch (error) {
     console.error('Error fetching note:', error);
     return null;

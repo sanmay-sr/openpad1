@@ -21,8 +21,10 @@ import "prismjs/components/prism-markdown";
 interface CodeBoxProps {
   content: string;
   language?: string;
-  onContentChange: (content: string) => void;
-  onRemove: () => void;
+  onContentChange?: (content: string) => void;
+  onLanguageChange?: (language: string) => void;
+  onRemove?: () => void;
+  readOnly?: boolean;
   className?: string;
 }
 
@@ -30,7 +32,9 @@ export const CodeBox: React.FC<CodeBoxProps> = ({
   content,
   language = "javascript",
   onContentChange,
+  onLanguageChange,
   onRemove,
+  readOnly = false,
   className,
 }) => {
   const { theme } = useTheme();
@@ -69,6 +73,14 @@ export const CodeBox: React.FC<CodeBoxProps> = ({
     }
   }, [content, currentLanguage, theme]);
 
+  const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newLanguage = e.target.value;
+    setCurrentLanguage(newLanguage);
+    if (onLanguageChange) {
+      onLanguageChange(newLanguage);
+    }
+  };
+
   const languageOptions = [
     { value: "javascript", label: "JavaScript" },
     { value: "typescript", label: "TypeScript" },
@@ -103,7 +115,8 @@ export const CodeBox: React.FC<CodeBoxProps> = ({
           
           <select
             value={currentLanguage}
-            onChange={(e) => setCurrentLanguage(e.target.value)}
+            onChange={handleLanguageChange}
+            disabled={readOnly}
             className={cn(
               "text-xs md:text-sm focus:outline-none focus:ring-1 focus:ring-primary/20 rounded px-1 py-0.5",
               theme === 'light' 
@@ -141,40 +154,47 @@ export const CodeBox: React.FC<CodeBoxProps> = ({
             )}
           </Button>
           
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 w-7 p-0"
-            onClick={onRemove}
-          >
-            <X className="h-4 w-4" />
-          </Button>
+          {!readOnly && onRemove && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 w-7 p-0"
+              onClick={onRemove}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       </div>
       
       <div className="relative">
-        <textarea
-          ref={textareaRef}
-          value={content}
-          onChange={(e) => {
-            onContentChange(e.target.value);
-          }}
-          className={cn(
-            "w-full px-4 py-3 font-mono text-sm outline-none resize-none",
-            theme === 'light' 
-              ? 'bg-white text-gray-900' 
-              : 'bg-gray-900 text-gray-100'
-          )}
-          placeholder="// Enter your code here"
-          spellCheck={false}
-        />
+        {!readOnly ? (
+          <textarea
+            ref={textareaRef}
+            value={content}
+            onChange={(e) => {
+              onContentChange && onContentChange(e.target.value);
+            }}
+            className={cn(
+              "w-full px-4 py-3 font-mono text-sm outline-none resize-none",
+              theme === 'light' 
+                ? 'bg-white text-gray-900' 
+                : 'bg-gray-900 text-gray-100'
+            )}
+            placeholder="// Enter your code here"
+            spellCheck={false}
+          />
+        ) : (
+          <div className="w-full px-4 py-3 font-mono text-sm overflow-auto max-h-[500px]"></div>
+        )}
         <pre 
           ref={preRef}
           className={cn(
-            "w-full px-4 py-3 m-0 font-mono text-sm whitespace-pre absolute top-0 left-0 pointer-events-none",
+            "w-full px-4 py-3 m-0 font-mono text-sm whitespace-pre",
+            readOnly ? "" : "absolute top-0 left-0 pointer-events-none",
             theme === 'light' ? 'bg-white' : 'bg-gray-900'
           )}
-          aria-hidden="true"
+          aria-hidden={!readOnly}
         >
           <code className={`language-${currentLanguage}`}>
             {content || "// Enter your code here"}
