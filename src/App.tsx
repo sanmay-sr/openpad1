@@ -8,12 +8,22 @@ import { useEffect, useState } from "react";
 import Index from "./pages/Index";
 import SimplifiedLanding from "./pages/SimplifiedLanding";
 import NotFound from "./pages/NotFound";
+import NotePage from "./pages/NotePage";
+import Auth from "./pages/Auth";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 // Import the CSS for code highlighting
 import "./styles/code.css";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -37,21 +47,25 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route 
-                path="/" 
-                element={isDirectVisit ? <SimplifiedLanding /> : <Index />} 
-              />
-              <Route path="/full" element={<Index />} />
-              <Route path="/simple" element={<SimplifiedLanding />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route 
+                  path="/" 
+                  element={isDirectVisit ? <SimplifiedLanding /> : <Index />} 
+                />
+                <Route path="/full" element={<Index />} />
+                <Route path="/simple" element={<SimplifiedLanding />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/:noteUrl" element={<NotePage />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

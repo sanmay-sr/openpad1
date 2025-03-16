@@ -1,10 +1,12 @@
+
 import React from "react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { animations } from "@/utils/animations";
 import { Button } from "@/components/Button";
-import { FileText, User, Moon, Sun } from "lucide-react";
+import { FileText, User, Moon, Sun, LogOut } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface HeaderProps {
   className?: string;
@@ -12,6 +14,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ className }) => {
   const { theme, toggleTheme } = useTheme();
+  const { isAuthenticated, signOut, isLoading } = useAuth();
 
   return (
     <header 
@@ -46,14 +49,29 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
           )}
         </Button>
         
-        <Button 
-          variant="outline" 
-          size="sm"
-          className="gap-2"
-        >
-          <User className="h-4 w-4" />
-          <span>Sign In</span>
-        </Button>
+        {isAuthenticated ? (
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="gap-2"
+            onClick={() => signOut()}
+            disabled={isLoading}
+          >
+            <LogOut className="h-4 w-4" />
+            <span>Sign Out</span>
+          </Button>
+        ) : (
+          <Link to="/auth">
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="gap-2"
+            >
+              <User className="h-4 w-4" />
+              <span>Sign In</span>
+            </Button>
+          </Link>
+        )}
       </div>
     </header>
   );

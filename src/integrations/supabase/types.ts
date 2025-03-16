@@ -15,27 +15,36 @@ export type Database = {
           created_at: string | null
           expires_at: string | null
           id: string
+          is_reserved: boolean
           owner_id: string | null
+          previous_versions: Json
           updated_at: string | null
           url: string
+          version_number: number
         }
         Insert: {
           content?: string | null
           created_at?: string | null
           expires_at?: string | null
           id?: string
+          is_reserved?: boolean
           owner_id?: string | null
+          previous_versions?: Json
           updated_at?: string | null
           url: string
+          version_number?: number
         }
         Update: {
           content?: string | null
           created_at?: string | null
           expires_at?: string | null
           id?: string
+          is_reserved?: boolean
           owner_id?: string | null
+          previous_versions?: Json
           updated_at?: string | null
           url?: string
+          version_number?: number
         }
         Relationships: []
       }
@@ -43,18 +52,24 @@ export type Database = {
         Row: {
           avatar_url: string | null
           id: string
+          reserved_urls_updated_at: string
+          reserved_urls_used: number
           updated_at: string | null
           username: string | null
         }
         Insert: {
           avatar_url?: string | null
           id: string
+          reserved_urls_updated_at?: string
+          reserved_urls_used?: number
           updated_at?: string | null
           username?: string | null
         }
         Update: {
           avatar_url?: string | null
           id?: string
+          reserved_urls_updated_at?: string
+          reserved_urls_used?: number
           updated_at?: string | null
           username?: string | null
         }
@@ -65,7 +80,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_note: {
+        Args: {
+          p_content: string
+          p_custom_url?: string
+          p_is_reserved?: boolean
+        }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
