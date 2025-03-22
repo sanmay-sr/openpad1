@@ -43,56 +43,33 @@ export const CodeBox: React.FC<CodeBoxProps> = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const preRef = useRef<HTMLPreElement>(null);
   
-  // Auto-resize textarea with debounce
+  // Auto-resize textarea
   useEffect(() => {
     const textarea = textareaRef.current;
     const pre = preRef.current;
     
     if (textarea && pre) {
-      const resizeTextarea = () => {
-        // Reset height to recalculate
-        textarea.style.height = 'auto';
-        
-        // Set textarea height to match pre element height
-        const preHeight = pre.scrollHeight;
-        textarea.style.height = `${preHeight + 16}px`; // Add padding
-        
-        // Minimum height
-        if (preHeight < 60) {
-          textarea.style.height = "60px";
-        }
-        
-        // Maximum height (with scrolling)
-        if (preHeight > 500) {
-          textarea.style.height = "500px";
-          textarea.style.overflowY = "auto";
-        } else {
-          textarea.style.overflowY = "hidden"; // Prevent scrollbar when not needed
-        }
-      };
+      // Set textarea height to match pre element height
+      const preHeight = pre.scrollHeight;
+      textarea.style.height = `${preHeight + 16}px`; // Add padding
       
-      // Initial resize
-      resizeTextarea();
+      // Minimum height
+      if (preHeight < 60) {
+        textarea.style.height = "60px";
+      }
       
-      // Add window resize listener to handle viewport changes
-      window.addEventListener('resize', resizeTextarea);
-      
-      // Cleanup
-      return () => {
-        window.removeEventListener('resize', resizeTextarea);
-      };
+      // Maximum height (with scrolling)
+      if (preHeight > 500) {
+        textarea.style.height = "500px";
+        textarea.style.overflowY = "auto";
+      }
     }
   }, [content, currentLanguage]);
 
   // Syntax highlighting
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      // Small timeout to ensure DOM is ready
-      const highlightTimer = setTimeout(() => {
-        Prism.highlightAll();
-      }, 0);
-      
-      return () => clearTimeout(highlightTimer);
+      Prism.highlightAll();
     }
   }, [content, currentLanguage, theme]);
 
@@ -101,16 +78,6 @@ export const CodeBox: React.FC<CodeBoxProps> = ({
     setCurrentLanguage(newLanguage);
     if (onLanguageChange) {
       onLanguageChange(newLanguage);
-    }
-  };
-  
-  const handleCopyCode = async () => {
-    try {
-      await navigator.clipboard.writeText(content);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error("Failed to copy text: ", err);
     }
   };
 
@@ -138,14 +105,13 @@ export const CodeBox: React.FC<CodeBoxProps> = ({
         animations.scaleIn(),
         className
       )}
-      aria-label={`Code snippet in ${currentLanguage}`}
     >
       <div className={cn(
         "code-box-header flex items-center justify-between p-2 px-3",
         theme === 'light' ? 'bg-gray-100' : 'bg-gray-800'
       )}>
         <div className="flex items-center gap-3">
-          <Code className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+          <Code className="h-4 w-4 text-muted-foreground" />
           
           <select
             value={currentLanguage}
@@ -157,7 +123,6 @@ export const CodeBox: React.FC<CodeBoxProps> = ({
                 ? 'bg-white text-gray-800 border-gray-200' 
                 : 'bg-gray-700 text-gray-200 border-gray-600'
             )}
-            aria-label="Select code language"
           >
             {languageOptions.map((option) => (
               <option 
@@ -176,16 +141,17 @@ export const CodeBox: React.FC<CodeBoxProps> = ({
             variant="ghost"
             size="sm"
             className="h-7 w-7 p-0"
-            onClick={handleCopyCode}
-            aria-label={copied ? "Copied to clipboard" : "Copy code to clipboard"}
-            title={copied ? "Copied!" : "Copy to clipboard"}
+            onClick={() => {
+              navigator.clipboard.writeText(content);
+              setCopied(true);
+              setTimeout(() => setCopied(false), 2000);
+            }}
           >
             {copied ? (
-              <Check className="h-4 w-4 text-green-500" aria-hidden="true" />
+              <Check className="h-4 w-4 text-green-500" />
             ) : (
-              <Clipboard className="h-4 w-4" aria-hidden="true" />
+              <Clipboard className="h-4 w-4" />
             )}
-            <span className="sr-only">{copied ? "Copied" : "Copy code"}</span>
           </Button>
           
           {!readOnly && onRemove && (
@@ -194,11 +160,8 @@ export const CodeBox: React.FC<CodeBoxProps> = ({
               size="sm"
               className="h-7 w-7 p-0"
               onClick={onRemove}
-              aria-label="Remove code block"
-              title="Remove code block"
             >
-              <X className="h-4 w-4" aria-hidden="true" />
-              <span className="sr-only">Remove code block</span>
+              <X className="h-4 w-4" />
             </Button>
           )}
         </div>
@@ -220,14 +183,9 @@ export const CodeBox: React.FC<CodeBoxProps> = ({
             )}
             placeholder="// Enter your code here"
             spellCheck={false}
-            aria-label={`Edit code in ${currentLanguage}`}
-            style={{ tabSize: 2 }}
           />
         ) : (
-          <div 
-            className="w-full px-4 py-3 font-mono text-sm overflow-auto max-h-[500px]"
-            aria-label={`Read-only code in ${currentLanguage}`}
-          ></div>
+          <div className="w-full px-4 py-3 font-mono text-sm overflow-auto max-h-[500px]"></div>
         )}
         <pre 
           ref={preRef}
@@ -237,7 +195,6 @@ export const CodeBox: React.FC<CodeBoxProps> = ({
             theme === 'light' ? 'bg-white' : 'bg-gray-900'
           )}
           aria-hidden={!readOnly}
-          style={{ tabSize: 2 }}
         >
           <code className={`language-${currentLanguage}`}>
             {content || "// Enter your code here"}

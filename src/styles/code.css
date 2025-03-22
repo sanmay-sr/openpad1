@@ -3,12 +3,6 @@
 .code-box {
   position: relative;
   transition: all 0.2s ease;
-  overflow: hidden;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-}
-
-.code-box:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .code-box textarea {
@@ -18,7 +12,6 @@
   white-space: pre;
   overflow-wrap: normal;
   overflow-x: auto;
-  transition: height 0.1s ease;
 }
 
 .code-box pre {
@@ -32,17 +25,6 @@
 
 .code-box pre code {
   font-family: inherit;
-  display: block;
-  padding: 0.1em 0;
-}
-
-/* Header styles */
-.code-box-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.5rem 0.75rem;
-  border-bottom: 1px solid var(--border);
 }
 
 /* Light theme */
@@ -90,10 +72,6 @@
 .dark-code .token.operator { color: var(--code-operator) !important; }
 .dark-code .token.class-name { color: var(--code-class) !important; }
 .dark-code .token.property { color: var(--code-property) !important; }
-.dark-code .token.punctuation { color: #d4d4d4 !important; }
-.dark-code .token.tag { color: #569CD6 !important; }
-.dark-code .token.attr-name { color: #9CDCFE !important; }
-.dark-code .token.attr-value { color: #CE9178 !important; }
 
 /* Transitions */
 .code-box,
@@ -101,35 +79,6 @@
 .code-box code,
 .code-box textarea {
   transition: background-color 0.2s ease, color 0.2s ease;
-}
-
-/* Line numbers styling when added */
-.line-numbers .line-numbers-rows {
-  border-right: 1px solid var(--border) !important;
-  padding-right: 0.5rem;
-}
-
-/* Scrollbar styles for code blocks */
-.code-box pre::-webkit-scrollbar,
-.code-box textarea::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-.code-box pre::-webkit-scrollbar-track,
-.code-box textarea::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.code-box pre::-webkit-scrollbar-thumb,
-.code-box textarea::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 3px;
-}
-
-.dark-code pre::-webkit-scrollbar-thumb,
-.dark-code textarea::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
 }
 
 /* Mobile optimization */
