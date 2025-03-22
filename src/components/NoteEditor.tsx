@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { animations } from "@/utils/animations";
@@ -207,14 +206,14 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
           <div>
             <label className="block text-sm font-medium mb-1">Custom URL (required)</label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-2 text-xs text-muted-foreground">
-                {window.location.origin}/
+              <span className="absolute inset-y-0 left-0 flex items-center pl-2 text-xs text-muted-foreground z-10">
+                {process.env.NODE_ENV === 'development' ? 'openpad.io/' : window.location.origin + '/'}
               </span>
               <input
                 type="text"
                 value={customUrl}
                 onChange={(e) => setCustomUrl(e.target.value.replace(/\s+/g, "-").toLowerCase())}
-                className="w-full pl-24 pr-3 py-2 text-sm rounded-md border border-input bg-transparent focus:outline-none focus:ring-1 focus:ring-primary"
+                className="w-full pl-[100px] pr-3 py-2 text-sm rounded-md border border-input bg-transparent focus:outline-none focus:ring-1 focus:ring-primary relative z-0"
                 placeholder="my-custom-url"
                 required
               />
@@ -271,13 +270,26 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
       
       {!isMobile && (
         <div className={cn("mt-3 text-xs md:text-sm text-muted-foreground text-center", animations.fadeIn({ delay: 0.2 }))}>
-          <p>Notes will expire after 30 days. Your note will be available at: {customUrl ? `${window.location.origin}/${customUrl}` : '[custom-url]'}</p>
+          <p>Notes will expire after 30 days. Your note will be available at: {customUrl ? `${process.env.NODE_ENV === 'development' ? 'openpad.io' : window.location.origin}/${customUrl}` : '[custom-url]'}</p>
+          <p className="mt-1 font-medium">⚠️ Unless reserved, anyone with the URL can edit your note.</p>
           {!isAuthenticated && (
             <p className="mt-1">
               <a href="/auth" className="text-primary hover:underline">
                 Sign in
               </a>{" "}
               to reserve custom URLs and secure your notes.
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Add explanation for mobile users too since it's important information */}
+      {isMobile && (
+        <div className={cn("mt-3 text-xs text-muted-foreground text-center px-3", animations.fadeIn({ delay: 0.2 }))}>
+          <p className="font-medium">⚠️ Unless reserved, anyone with the URL can edit your note.</p>
+          {!isAuthenticated && (
+            <p className="mt-1">
+              <a href="/auth" className="text-primary hover:underline">Sign in</a> to reserve URLs.
             </p>
           )}
         </div>
