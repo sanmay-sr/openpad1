@@ -28,9 +28,19 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
   const [customUrl, setCustomUrl] = useState("");
   const [isReserved, setIsReserved] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showAdvanced, setShowAdvanced] = useState(true); // Always show custom URL field
+  const [showAdvanced, setShowAdvanced] = useState(true);
+  const [prefixWidth, setPrefixWidth] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const prefixRef = useRef<HTMLSpanElement>(null);
   const isMobile = useIsMobile();
+  
+  // Calculate prefix width
+  useEffect(() => {
+    if (prefixRef.current) {
+      const width = prefixRef.current.getBoundingClientRect().width;
+      setPrefixWidth(width);
+    }
+  }, []);
   
   // Auto-resize textarea
   useEffect(() => {
@@ -206,14 +216,20 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
           <div>
             <label className="block text-sm font-medium mb-1">Custom URL (required)</label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-2 text-xs text-muted-foreground z-10">
+              <span 
+                ref={prefixRef}
+                className="absolute inset-y-0 left-0 flex items-center pl-2 text-xs text-muted-foreground/70"
+              >
                 {process.env.NODE_ENV === 'development' ? 'openpad.io/' : window.location.origin + '/'}
               </span>
               <input
                 type="text"
                 value={customUrl}
                 onChange={(e) => setCustomUrl(e.target.value.replace(/\s+/g, "-").toLowerCase())}
-                className="w-full pl-[100px] pr-3 py-2 text-sm rounded-md border border-input bg-transparent focus:outline-none focus:ring-1 focus:ring-primary relative z-0"
+                className="w-full pr-3 py-2 text-sm rounded-md border border-input bg-transparent focus:outline-none focus:ring-1 focus:ring-primary"
+                style={{
+                  paddingLeft: prefixWidth ? `${prefixWidth + 16}px` : '120px', // 16px for additional spacing
+                }}
                 placeholder="my-custom-url"
                 required
               />
