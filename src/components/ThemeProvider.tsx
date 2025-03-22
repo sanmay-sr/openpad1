@@ -11,10 +11,9 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => {
-    // Check local storage or system preference
+    // Always use system preference on page load
     if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('theme') as Theme;
-      if (stored) return stored;
+      console.log('System prefers dark:', window.matchMedia('(prefers-color-scheme: dark)').matches);
       return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }
     return 'light';
@@ -24,7 +23,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const root = window.document.documentElement;
     root.classList.remove('light', 'dark');
     root.classList.add(theme);
-    localStorage.setItem('theme', theme);
+    console.log('Theme applied:', theme);
+    console.log('Current classes:', root.classList);
   }, [theme]);
 
   const toggleTheme = () => {
