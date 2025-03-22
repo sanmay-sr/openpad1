@@ -22,3 +22,13 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Cursor IDE
+.cursor/
+.cursor/*
+.cursor/rules/
+
+# Lock files (optional, but often ignored in projects)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
