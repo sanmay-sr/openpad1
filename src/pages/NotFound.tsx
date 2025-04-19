@@ -5,9 +5,11 @@ import { ArrowLeft, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { animations } from "@/utils/animations";
+import { useAuth } from "@/contexts/AuthContext";
 
 const NotFound = () => {
   const location = useLocation();
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     console.error(

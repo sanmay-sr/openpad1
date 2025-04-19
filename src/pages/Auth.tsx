@@ -1,29 +1,44 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { animations } from '@/utils/animations';
 import { Button } from '@/components/Button';
 import { Eye, EyeOff, LogIn, UserPlus } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { InfoIcon } from 'lucide-react';
 
 type AuthMode = 'signin' | 'signup';
 
 const Auth = () => {
-  const { signIn, signUp, isAuthenticated, isLoading } = useAuth();
+  const { signIn, signUp, isAuthenticated, isLoading, isEmailVerified, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [mode, setMode] = useState<AuthMode>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [showVerificationMessage, setShowVerificationMessage] = useState(false);
 
-  // If already authenticated, redirect to home
-  if (isAuthenticated && !isLoading) {
+  // Check URL parameters for verification status
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.has('verification')) {
+      setShowVerificationMessage(true);
+    }
+  }, [location]);
+
+  // If user is authenticated and verified, redirect to home
+  if (isAuthenticated && isEmailVerified && !isLoading) {
     return <Navigate to="/" />;
   }
+  
+  // If user is authenticated but not verified, show verification alert
+  const showVerificationAlert = isAuthenticated && !isEmailVerified && !isLoading;
 
   const toggleMode = () => {
     setMode(mode === 'signin' ? 'signup' : 'signin');
@@ -37,10 +52,10 @@ const Auth = () => {
     try {
       if (mode === 'signin') {
         await signIn(email, password);
-        navigate('/');
+        // Navigate will happen in the condition above if verified
       } else {
         await signUp(email, password);
-        // Stay on page for confirmation message
+        setShowVerificationMessage(true);
       }
     } catch (error: any) {
       setError(error.message || 'An error occurred');
@@ -63,6 +78,26 @@ const Auth = () => {
                 : 'Create an account to reserve custom URLs'}
             </p>
           </div>
+
+          {/* Show verification email sent message */}
+          {showVerificationMessage && (
+            <Alert className="mb-6 bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
+              <InfoIcon className="h-4 w-4 text-blue-500" />
+              <AlertDescription className="text-blue-700 dark:text-blue-300">
+                Verification email sent! Please check your inbox and verify your email address before signing in.
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          {/* Show verification required message for signed in but unverified users */}
+          {showVerificationAlert && (
+            <Alert className="mb-6 bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800">
+              <InfoIcon className="h-4 w-4 text-amber-500" />
+              <AlertDescription className="text-amber-700 dark:text-amber-300">
+                Please verify your email address to fully access the application. Check your inbox for a verification link.
+              </AlertDescription>
+            </Alert>
+          )}
 
           {error && (
             <div className="bg-destructive/10 text-destructive px-4 py-3 rounded-md mb-4">

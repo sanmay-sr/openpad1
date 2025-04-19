@@ -11,6 +11,7 @@ import NotePage from "./pages/NotePage";
 import Auth from "./pages/Auth";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 // Import the CSS for code highlighting
 import "./styles/code.css";
@@ -45,9 +46,17 @@ const App = () => {
             <Sonner />
             <BrowserRouter>
               <Routes>
-                <Route path="/" element={<Index />} />
+                <Route path="/" element={
+                  <ProtectedRoute requireVerification={false}>
+                    <Index />
+                  </ProtectedRoute>
+                } />
                 <Route path="/auth" element={<Auth />} />
-                <Route path="/:noteUrl" element={<NotePage />} />
+                <Route path="/:noteUrl" element={
+                  <ProtectedRoute requireVerification={false}>
+                    <NotePage />
+                  </ProtectedRoute>
+                } />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>

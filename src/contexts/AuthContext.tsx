@@ -13,6 +13,7 @@ type AuthContextType = {
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   isAuthenticated: boolean;
+  isEmailVerified: boolean;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,6 +23,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  
   const isAuthenticated = !!user;
 
   useEffect(() => {
@@ -29,7 +32,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      
+      // Check email verification status
       if (session?.user) {
+        checkEmailVerification(session.user);
         fetchProfile(session.user.id);
       } else {
         setIsLoading(false);
@@ -43,9 +49,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(session?.user ?? null);
         
         if (session?.user) {
+          checkEmailVerification(session.user);
           fetchProfile(session.user.id);
         } else {
           setProfile(null);
+          setIsEmailVerified(false);
           setIsLoading(false);
         }
       }
@@ -55,6 +63,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       subscription.unsubscribe();
     };
   }, []);
+
+  const checkEmailVerification = (user: User) => {
+    // Supabase stores email verification status in user metadata
+    setIsEmailVerified(user.email_confirmed_at !== null);
+  };
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -76,9 +89,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signIn = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error, data } = await supabase.auth.signInWithPassword({ email, password });
+      
       if (error) throw error;
-      toast.success('Signed in successfully');
+      
+      // Check email verification after login
+      if (data?.user && data.user.email_confirmed_at === null) {
+        toast.warning('Please verify your email address to fully access the application');
+      } else {
+        toast.success('Signed in successfully');
+      }
     } catch (error: any) {
       toast.error(error.message || 'Error signing in');
       throw error;
@@ -90,9 +110,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signUp = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signUp({ email, password });
+      const { error } = await supabase.auth.signUp({ 
+        email, 
+        password,
+        options: {
+          emailRedirectTo: window.location.origin + '/auth'
+        }
+      });
+      
       if (error) throw error;
-      toast.success('Sign up successful! Check your email for confirmation.');
+      toast.success('Sign up successful! Please check your email for verification.');
     } catch (error: any) {
       toast.error(error.message || 'Error signing up');
       throw error;
@@ -123,7 +150,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       signIn,
       signUp,
       signOut,
-      isAuthenticated
+      isAuthenticated,
+      isEmailVerified
     }}>
       {children}
     </AuthContext.Provider>
