@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { animations } from "@/utils/animations";
 import { Button } from "@/components/Button";
@@ -15,6 +15,7 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({ className }) => {
   const { theme, toggleTheme } = useTheme();
   const { isAuthenticated, signOut, isLoading } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <header 
@@ -23,17 +24,20 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
         className
       )}
     >
-      <div className={cn("flex items-center gap-2", animations.fadeIn())}>
+      <Link 
+        to="/" 
+        className={cn("flex items-center gap-2", animations.fadeIn())}
+      >
         <FileText className="h-6 w-6 text-primary" />
-        <Link to="/" className="text-xl font-semibold tracking-tight hover:text-primary transition-colors duration-200">
+        <span className="text-xl font-semibold tracking-tight hover:text-primary transition-colors duration-200">
           OpenPad
-        </Link>
+        </span>
         <div className="hidden sm:block">
           <span className="text-xs px-2 py-0.5 ml-2 rounded-full bg-secondary text-muted-foreground">
             Beta
           </span>
         </div>
-      </div>
+      </Link>
       
       <div className={cn("flex items-center gap-3", animations.fadeIn({ delay: 0.1 }))}>
         <Button
@@ -50,16 +54,27 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
         </Button>
         
         {isAuthenticated ? (
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="gap-2"
-            onClick={() => signOut()}
-            disabled={isLoading}
-          >
-            <LogOut className="h-4 w-4" />
-            <span>Sign Out</span>
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/dashboard')}
+              className="gap-2"
+            >
+              <User className="h-4 w-4" />
+              <span>Dashboard</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="gap-2"
+              onClick={() => signOut()}
+              disabled={isLoading}
+            >
+              <LogOut className="h-4 w-4" />
+              <span>Sign Out</span>
+            </Button>
+          </div>
         ) : (
           <Link to="/auth">
             <Button 
