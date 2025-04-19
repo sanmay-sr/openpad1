@@ -47,22 +47,18 @@ const App = () => {
             <Sonner />
             <BrowserRouter>
               <Routes>
-                <Route path="/" element={
-                  <ProtectedRoute requireVerification={false}>
-                    <Index />
-                  </ProtectedRoute>
-                } />
+                {/* Public routes accessible without authentication */}
+                <Route path="/" element={<Index />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/:noteUrl" element={<NotePage />} />
+                
+                {/* Protected routes that require authentication */}
                 <Route path="/dashboard" element={
                   <ProtectedRoute>
                     <Dashboard />
                   </ProtectedRoute>
                 } />
-                <Route path="/:noteUrl" element={
-                  <ProtectedRoute requireVerification={false}>
-                    <NotePage />
-                  </ProtectedRoute>
-                } />
+                
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
