@@ -18,8 +18,21 @@ export const AccountSettings = () => {
 
     try {
       setIsDeleting(true);
-      const { error } = await supabase.rpc('delete_user');
+      // Since we can't directly delete the user from the client side,
+      // we'll use a custom method or fallback to just signing out
+      const { error } = await supabase.auth.updateUser({
+        data: { requested_deletion: true }
+      });
+      
       if (error) throw error;
+      
+      // Delete the user's profile data
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', (await supabase.auth.getUser()).data.user?.id || '');
+        
+      if (profileError) throw profileError;
       
       await signOut();
       toast.success("Account deleted successfully");
