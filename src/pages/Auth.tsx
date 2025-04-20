@@ -4,25 +4,45 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { animations } from '@/utils/animations';
-import { Button } from '@/components/Button';
-import { Eye, EyeOff, LogIn, UserPlus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Eye, EyeOff, LogIn, UserPlus, Mail } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { InfoIcon } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { loginSchema, signupSchema } from '@/lib/auth-schema';
+import { ForgotPassword } from '@/components/auth/ForgotPassword';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
 
-type AuthMode = 'signin' | 'signup';
+type AuthMode = 'signin' | 'signup' | 'forgot-password';
 
 const Auth = () => {
-  const { signIn, signUp, isAuthenticated, isLoading, isEmailVerified, user } = useAuth();
+  const { signIn, signUp, isAuthenticated, isLoading: authLoading, isEmailVerified, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [mode, setMode] = useState<AuthMode>('signin');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showVerificationMessage, setShowVerificationMessage] = useState(false);
+
+  const form = useForm({
+    resolver: zodResolver(mode === 'signin' ? loginSchema : signupSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+      confirmPassword: '',
+    },
+  });
 
   // Check URL parameters for verification status
   useEffect(() => {
@@ -33,33 +53,40 @@ const Auth = () => {
   }, [location]);
 
   // If user is authenticated and verified, redirect to home
-  if (isAuthenticated && isEmailVerified && !isLoading) {
+  if (isAuthenticated && isEmailVerified && !authLoading) {
     return <Navigate to="/" />;
   }
   
-  // If user is authenticated but not verified, show verification alert
-  const showVerificationAlert = isAuthenticated && !isEmailVerified && !isLoading;
+  const showVerificationAlert = isAuthenticated && !isEmailVerified && !authLoading;
 
-  const toggleMode = () => {
-    setMode(mode === 'signin' ? 'signup' : 'signin');
-    setError('');
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-
+  const onSubmit = async (values: {
+    email: string;
+    password: string;
+    confirmPassword?: string;
+  }) => {
     try {
       if (mode === 'signin') {
-        await signIn(email, password);
-        // Navigate will happen in the condition above if verified
+        await signIn(values.email, values.password);
       } else {
-        await signUp(email, password);
+        await signUp(values.email, values.password);
         setShowVerificationMessage(true);
       }
     } catch (error: any) {
-      setError(error.message || 'An error occurred');
+      if (error.message.includes('User already registered')) {
+        form.setError('email', {
+          message: 'This email is already registered. Please sign in instead.',
+        });
+      } else {
+        form.setError('root', {
+          message: error.message || 'An error occurred',
+        });
+      }
     }
+  };
+
+  const toggleMode = (newMode: AuthMode) => {
+    setMode(newMode);
+    form.reset();
   };
 
   return (
@@ -67,118 +94,184 @@ const Auth = () => {
       <Header />
       
       <main className="flex-1 container px-4 py-8 max-w-md mx-auto flex items-center justify-center">
-        <div className={cn("w-full", animations.fadeIn())}>
-          <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold">
-              {mode === 'signin' ? 'Sign In' : 'Create Account'}
-            </h1>
-            <p className="text-muted-foreground mt-2">
-              {mode === 'signin' 
-                ? 'Sign in to access your reserved notes'
-                : 'Create an account to reserve custom URLs'}
-            </p>
-          </div>
-
-          {/* Show verification email sent message */}
-          {showVerificationMessage && (
-            <Alert className="mb-6 bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
-              <InfoIcon className="h-4 w-4 text-blue-500" />
-              <AlertDescription className="text-blue-700 dark:text-blue-300">
-                Verification email sent! Please check your inbox and verify your email address before signing in.
-              </AlertDescription>
-            </Alert>
-          )}
-          
-          {/* Show verification required message for signed in but unverified users */}
-          {showVerificationAlert && (
-            <Alert className="mb-6 bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800">
-              <InfoIcon className="h-4 w-4 text-amber-500" />
-              <AlertDescription className="text-amber-700 dark:text-amber-300">
-                Please verify your email address to fully access the application. Check your inbox for a verification link.
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {error && (
-            <div className="bg-destructive/10 text-destructive px-4 py-3 rounded-md mb-4">
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium mb-1">
-                Email Address
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2 border border-input rounded-md bg-background focus:outline-none focus:ring-1 focus:ring-primary"
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium mb-1">
-                Password
-              </label>
-              <div className="relative">
-                <input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-2 border border-input rounded-md bg-background focus:outline-none focus:ring-1 focus:ring-primary"
-                  required
-                />
-                <button
-                  type="button"
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </button>
+        <div className={cn("w-full space-y-6", animations.fadeIn())}>
+          {mode === 'forgot-password' ? (
+            <ForgotPassword onBack={() => toggleMode('signin')} />
+          ) : (
+            <>
+              <div className="text-center">
+                <h1 className="text-2xl font-bold">
+                  {mode === 'signin' ? 'Welcome Back' : 'Create Account'}
+                </h1>
+                <p className="text-muted-foreground mt-2">
+                  {mode === 'signin' 
+                    ? 'Sign in to access your reserved notes'
+                    : 'Create an account to reserve custom URLs'}
+                </p>
               </div>
-            </div>
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                'Processing...'
-              ) : mode === 'signin' ? (
-                <span className="flex items-center justify-center gap-2">
-                  <LogIn className="h-4 w-4" />
-                  Sign In
-                </span>
-              ) : (
-                <span className="flex items-center justify-center gap-2">
-                  <UserPlus className="h-4 w-4" />
-                  Sign Up
-                </span>
+              {showVerificationMessage && (
+                <Alert className="mb-6 bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
+                  <InfoIcon className="h-4 w-4 text-blue-500" />
+                  <AlertDescription className="text-blue-700 dark:text-blue-300">
+                    Verification email sent! Please check your inbox and verify your email address before signing in.
+                  </AlertDescription>
+                </Alert>
               )}
-            </Button>
-          </form>
+              
+              {showVerificationAlert && (
+                <Alert className="mb-6 bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800">
+                  <InfoIcon className="h-4 w-4 text-amber-500" />
+                  <AlertDescription className="text-amber-700 dark:text-amber-300">
+                    Please verify your email address to fully access the application. Check your inbox for a verification link.
+                  </AlertDescription>
+                </Alert>
+              )}
 
-          <div className="mt-6 text-center">
-            <button
-              type="button"
-              onClick={toggleMode}
-              className="text-primary hover:underline"
-            >
-              {mode === 'signin'
-                ? "Don't have an account? Sign up"
-                : 'Already have an account? Sign in'}
-            </button>
-          </div>
+              {form.formState.errors.root && (
+                <Alert variant="destructive">
+                  <AlertDescription>
+                    {form.formState.errors.root.message}
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input 
+                            {...field}
+                            type="email"
+                            placeholder="Enter your email"
+                            disabled={authLoading}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Password</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input 
+                              {...field}
+                              type={showPassword ? "text" : "password"}
+                              placeholder="Enter your password"
+                              disabled={authLoading}
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-0 top-0 h-full px-3"
+                              onClick={() => setShowPassword(!showPassword)}
+                            >
+                              {showPassword ? (
+                                <EyeOff className="h-4 w-4" />
+                              ) : (
+                                <Eye className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {mode === 'signup' && (
+                    <FormField
+                      control={form.control}
+                      name="confirmPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Confirm Password</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Input 
+                                {...field}
+                                type={showConfirmPassword ? "text" : "password"}
+                                placeholder="Confirm your password"
+                                disabled={authLoading}
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="absolute right-0 top-0 h-full px-3"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                              >
+                                {showConfirmPassword ? (
+                                  <EyeOff className="h-4 w-4" />
+                                ) : (
+                                  <Eye className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+
+                  <div className="space-y-2">
+                    <Button type="submit" className="w-full" disabled={authLoading}>
+                      {mode === 'signin' ? (
+                        <>
+                          <LogIn className="mr-2 h-4 w-4" />
+                          {authLoading ? "Signing in..." : "Sign In"}
+                        </>
+                      ) : (
+                        <>
+                          <UserPlus className="mr-2 h-4 w-4" />
+                          {authLoading ? "Creating account..." : "Create Account"}
+                        </>
+                      )}
+                    </Button>
+
+                    {mode === 'signin' && (
+                      <Button
+                        type="button"
+                        variant="link"
+                        className="w-full"
+                        onClick={() => toggleMode('forgot-password')}
+                        disabled={authLoading}
+                      >
+                        <Mail className="mr-2 h-4 w-4" />
+                        Forgot Password?
+                      </Button>
+                    )}
+                  </div>
+                </form>
+              </Form>
+
+              <div className="text-center">
+                <Button
+                  type="button"
+                  variant="link"
+                  onClick={() => toggleMode(mode === 'signin' ? 'signup' : 'signin')}
+                  disabled={authLoading}
+                >
+                  {mode === 'signin'
+                    ? "Don't have an account? Sign up"
+                    : 'Already have an account? Sign in'}
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       </main>
       
