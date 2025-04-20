@@ -8,6 +8,7 @@ import { getNote, Note, parseContent, updateNote } from "@/services/noteService"
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { NoteEditor } from "./NoteEditor";
+import { supabase } from "@/integrations/supabase/client";
 
 interface NoteViewerProps {
   className?: string;
