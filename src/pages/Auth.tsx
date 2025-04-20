@@ -34,6 +34,7 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showVerificationMessage, setShowVerificationMessage] = useState(false);
+  const [generalError, setGeneralError] = useState<string | null>(null);
 
   const form = useForm({
     resolver: zodResolver(mode === 'signin' ? loginSchema : signupSchema),
@@ -43,6 +44,12 @@ const Auth = () => {
       confirmPassword: '',
     },
   });
+
+  // Reset general error when mode changes
+  useEffect(() => {
+    setGeneralError(null);
+    form.reset();
+  }, [mode, form]);
 
   // Check URL parameters for verification status
   useEffect(() => {
@@ -64,6 +71,8 @@ const Auth = () => {
     password: string;
     confirmPassword?: string;
   }) => {
+    setGeneralError(null);
+    
     try {
       if (mode === 'signin') {
         await signIn(values.email, values.password);
@@ -72,20 +81,22 @@ const Auth = () => {
         setShowVerificationMessage(true);
       }
     } catch (error: any) {
+      console.error("Auth error:", error.message);
+      
+      // Handle specific error messages for better user experience
       if (error.message.includes('User already registered')) {
-        form.setError('email', {
-          message: 'This email is already registered. Please sign in instead.',
-        });
+        setGeneralError('This email is already registered. Please sign in instead.');
+      } else if (error.message.includes('Invalid login credentials')) {
+        setGeneralError('Invalid email or password. Please try again.');
       } else {
-        form.setError('root', {
-          message: error.message || 'An error occurred',
-        });
+        setGeneralError(error.message || 'An error occurred during authentication');
       }
     }
   };
 
   const toggleMode = (newMode: AuthMode) => {
     setMode(newMode);
+    setGeneralError(null);
     form.reset();
   };
 
@@ -128,10 +139,10 @@ const Auth = () => {
                 </Alert>
               )}
 
-              {form.formState.errors.root && (
+              {generalError && (
                 <Alert variant="destructive">
                   <AlertDescription>
-                    {form.formState.errors.root.message}
+                    {generalError}
                   </AlertDescription>
                 </Alert>
               )}

@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session, User } from '@supabase/supabase-js';
@@ -102,7 +103,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (error: any) {
       toast.error(error.message || 'Error signing in');
-      throw error;
+      throw error; // Rethrow so the UI can handle it
     } finally {
       setIsLoading(false);
     }
@@ -111,19 +112,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signUp = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signUp({ 
+      const { error, data } = await supabase.auth.signUp({ 
         email, 
         password,
         options: {
-          emailRedirectTo: window.location.origin + '/auth'
+          emailRedirectTo: window.location.origin + '/auth?verification=true'
         }
       });
       
-      if (error) throw error;
+      if (error) {
+        // Enhanced error logging for debugging
+        console.error('Signup error:', error);
+        throw error;
+      }
+
+      // Check if the user already exists
+      if (data?.user && data.user.identities && data.user.identities.length === 0) {
+        throw new Error('User already registered with this email address');
+      }
+      
       toast.success('Sign up successful! Please check your email for verification.');
     } catch (error: any) {
       toast.error(error.message || 'Error signing up');
-      throw error;
+      throw error; // Rethrow to allow the Auth component to handle it
     } finally {
       setIsLoading(false);
     }
