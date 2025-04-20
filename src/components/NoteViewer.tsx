@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { animations } from "@/utils/animations";
 import { Button } from "@/components/Button";
 import { CodeBox } from "@/components/CodeBox";
-import { Edit, Share, Clock, FileText } from "lucide-react";
+import { Edit, Share, Clock, FileText, Heart } from "lucide-react";
 import { getNote, Note, parseContent, updateNote } from "@/services/noteService";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -21,11 +20,67 @@ export const NoteViewer: React.FC<NoteViewerProps> = ({ className, url }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isFavorite, setIsFavorite] = useState(false);
   
   useEffect(() => {
     fetchNote();
-  }, [url]);
+    if (user) {
+      checkFavorite();
+    }
+  }, [url, user]);
   
+  const checkFavorite = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('favorites')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('note_url', url)
+        .maybeSingle();
+      
+      if (error) throw error;
+      setIsFavorite(!!data);
+    } catch (err) {
+      console.error('Error checking favorite:', err);
+    }
+  };
+  
+  const toggleFavorite = async () => {
+    if (!user) {
+      toast.error("Please sign in to favorite notes");
+      return;
+    }
+    
+    try {
+      if (isFavorite) {
+        const { error } = await supabase
+          .from('favorites')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('note_url', url);
+        
+        if (error) throw error;
+        toast.success("Removed from favorites");
+      } else {
+        const { error } = await supabase
+          .from('favorites')
+          .insert({
+            user_id: user.id,
+            note_url: url
+          });
+        
+        if (error) throw error;
+        toast.success("Added to favorites");
+      }
+      
+      setIsFavorite(!isFavorite);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update favorite");
+    }
+  };
+
   const fetchNote = async () => {
     setIsLoading(true);
     setError(null);
@@ -57,21 +112,9 @@ export const NoteViewer: React.FC<NoteViewerProps> = ({ className, url }) => {
   
   const handleShare = () => {
     const noteUrl = `${window.location.origin}/${url}`;
-    
-    // Try to use the clipboard API
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(noteUrl)
-        .then(() => {
-          toast.success("URL copied to clipboard");
-        })
-        .catch(() => {
-          // Fallback
-          prompt("Copy this URL:", noteUrl);
-        });
-    } else {
-      // Fallback for browsers without clipboard API
-      prompt("Copy this URL:", noteUrl);
-    }
+    navigator.clipboard.writeText(noteUrl)
+      .then(() => toast.success("URL copied to clipboard"))
+      .catch(() => toast.error("Failed to copy URL"));
   };
   
   const canEdit = () => {
@@ -127,10 +170,8 @@ export const NoteViewer: React.FC<NoteViewerProps> = ({ className, url }) => {
     );
   }
   
-  // Parse the note content
   const { title, textContent, codeSnippets } = parseContent(note.content || "");
   
-  // Format expiration date
   const expiresAt = note.expires_at 
     ? new Date(note.expires_at) 
     : new Date(new Date().getTime() + 30 * 24 * 60 * 60 * 1000);
@@ -166,10 +207,23 @@ export const NoteViewer: React.FC<NoteViewerProps> = ({ className, url }) => {
             </Button>
           )}
           
-          <Button variant="default" size="sm" onClick={handleShare}>
+          <Button variant="outline" size="sm" onClick={handleShare}>
             <Share className="h-4 w-4 sm:mr-2" />
             <span className="hidden sm:inline">Share</span>
           </Button>
+
+          {user && (
+            <Button
+              variant={isFavorite ? "default" : "outline"}
+              size="sm"
+              onClick={toggleFavorite}
+            >
+              <Heart className={cn("h-4 w-4 sm:mr-2", isFavorite && "fill-current")} />
+              <span className="hidden sm:inline">
+                {isFavorite ? "Favorited" : "Favorite"}
+              </span>
+            </Button>
+          )}
         </div>
       </div>
       

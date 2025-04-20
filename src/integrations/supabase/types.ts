@@ -9,6 +9,27 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      favorites: {
+        Row: {
+          created_at: string
+          id: string
+          note_url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note_url: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note_url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notes: {
         Row: {
           content: string | null
@@ -87,6 +108,10 @@ export type Database = {
           p_is_reserved?: boolean
         }
         Returns: Json
+      }
+      is_reserved_url: {
+        Args: { url_to_check: string }
+        Returns: boolean
       }
     }
     Enums: {
