@@ -6,15 +6,16 @@ import { cn } from '@/lib/utils';
 import { animations } from '@/utils/animations';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Eye, EyeOff, LogIn, UserPlus, Mail } from 'lucide-react';
+import { Eye, EyeOff, LogIn, UserPlus, Mail, Lock } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { InfoIcon } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { loginSchema, signupSchema } from '@/lib/auth-schema';
+import { loginSchema, signupSchema, resetPasswordSchema } from '@/lib/auth-schema';
 import { ForgotPassword } from '@/components/auth/ForgotPassword';
+import { supabase } from '@/integrations/supabase/client';
 import {
   Form,
   FormControl,
@@ -24,10 +25,10 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 
-type AuthMode = 'signin' | 'signup' | 'forgot-password';
+type AuthMode = 'signin' | 'signup' | 'forgot-password' | 'reset-password';
 
 const Auth = () => {
-  const { signIn, signUp, isAuthenticated, isLoading: authLoading, isEmailVerified, user } = useAuth();
+  const { signIn, signUp, isAuthenticated, isLoading: authLoading, isEmailVerified, user, updatePassword } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [mode, setMode] = useState<AuthMode>('signin');
@@ -35,15 +36,59 @@ const Auth = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showVerificationMessage, setShowVerificationMessage] = useState(false);
   const [generalError, setGeneralError] = useState<string | null>(null);
+  const [isHandlingPasswordReset, setIsHandlingPasswordReset] = useState(false);
 
   const form = useForm({
-    resolver: zodResolver(mode === 'signin' ? loginSchema : signupSchema),
+    resolver: zodResolver(
+      mode === 'signin' 
+        ? loginSchema 
+        : mode === 'signup' 
+          ? signupSchema 
+          : mode === 'reset-password'
+            ? resetPasswordSchema
+            : forgotPasswordSchema
+    ),
     defaultValues: {
       email: '',
       password: '',
       confirmPassword: '',
     },
   });
+
+  // Check for access token in URL hash on component mount
+  useEffect(() => {
+    const handlePasswordResetToken = async () => {
+      const hash = window.location.hash;
+      
+      if (hash && hash.includes('access_token') && hash.includes('type=recovery')) {
+        console.log('Password reset token detected');
+        setIsHandlingPasswordReset(true);
+        setMode('reset-password');
+        
+        try {
+          // Extract and set the access token
+          const accessToken = new URLSearchParams(hash.substring(1)).get('access_token');
+          
+          if (accessToken) {
+            // The updateUser method will be called when the form is submitted
+            toast.info('Please enter your new password');
+          } else {
+            throw new Error('Invalid password reset link');
+          }
+        } catch (error) {
+          console.error('Error processing password reset:', error);
+          toast.error('Invalid or expired password reset link');
+          setMode('signin');
+        } finally {
+          // Clear the URL hash
+          window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+          setIsHandlingPasswordReset(false);
+        }
+      }
+    };
+
+    handlePasswordResetToken();
+  }, []);
 
   // Reset general error when mode changes
   useEffect(() => {
@@ -57,10 +102,14 @@ const Auth = () => {
     if (params.has('verification')) {
       setShowVerificationMessage(true);
     }
+    
+    if (params.has('type') && params.get('type') === 'reset') {
+      setMode('reset-password');
+    }
   }, [location]);
 
   // If user is authenticated and verified, redirect to home
-  if (isAuthenticated && isEmailVerified && !authLoading) {
+  if (isAuthenticated && isEmailVerified && !authLoading && !isHandlingPasswordReset) {
     return <Navigate to="/" />;
   }
   
@@ -76,9 +125,13 @@ const Auth = () => {
     try {
       if (mode === 'signin') {
         await signIn(values.email, values.password);
-      } else {
+      } else if (mode === 'signup') {
         await signUp(values.email, values.password);
         setShowVerificationMessage(true);
+      } else if (mode === 'reset-password') {
+        await updatePassword(values.password);
+        toast.success("Password has been reset successfully");
+        setMode('signin');
       }
     } catch (error: any) {
       console.error("Auth error:", error.message);
@@ -112,12 +165,16 @@ const Auth = () => {
             <>
               <div className="text-center">
                 <h1 className="text-2xl font-bold">
-                  {mode === 'signin' ? 'Welcome Back' : 'Create Account'}
+                  {mode === 'signin' ? 'Welcome Back' : 
+                   mode === 'signup' ? 'Create Account' : 
+                   'Reset Your Password'}
                 </h1>
                 <p className="text-muted-foreground mt-2">
                   {mode === 'signin' 
                     ? 'Sign in to access your reserved notes'
-                    : 'Create an account to reserve custom URLs'}
+                    : mode === 'signup'
+                      ? 'Create an account to reserve custom URLs'
+                      : 'Enter a new password for your account'}
                 </p>
               </div>
 
@@ -149,66 +206,72 @@ const Auth = () => {
 
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input 
-                            {...field}
-                            type="email"
-                            placeholder="Enter your email"
-                            disabled={authLoading}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Password</FormLabel>
-                        <FormControl>
-                          <div className="relative">
+                  {mode !== 'reset-password' && (
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
                             <Input 
                               {...field}
-                              type={showPassword ? "text" : "password"}
-                              placeholder="Enter your password"
+                              type="email"
+                              placeholder="Enter your email"
                               disabled={authLoading}
                             />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="absolute right-0 top-0 h-full px-3"
-                              onClick={() => setShowPassword(!showPassword)}
-                            >
-                              {showPassword ? (
-                                <EyeOff className="h-4 w-4" />
-                              ) : (
-                                <Eye className="h-4 w-4" />
-                              )}
-                            </Button>
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
 
-                  {mode === 'signup' && (
+                  {(mode === 'signin' || mode === 'signup' || mode === 'reset-password') && (
+                    <FormField
+                      control={form.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            {mode === 'reset-password' ? 'New Password' : 'Password'}
+                          </FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Input 
+                                {...field}
+                                type={showPassword ? "text" : "password"}
+                                placeholder={mode === 'reset-password' ? "Enter your new password" : "Enter your password"}
+                                disabled={authLoading}
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="absolute right-0 top-0 h-full px-3"
+                                onClick={() => setShowPassword(!showPassword)}
+                              >
+                                {showPassword ? (
+                                  <EyeOff className="h-4 w-4" />
+                                ) : (
+                                  <Eye className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+
+                  {(mode === 'signup' || mode === 'reset-password') && (
                     <FormField
                       control={form.control}
                       name="confirmPassword"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Confirm Password</FormLabel>
+                          <FormLabel>Confirm {mode === 'reset-password' ? 'New ' : ''}Password</FormLabel>
                           <FormControl>
                             <div className="relative">
                               <Input 
@@ -245,10 +308,15 @@ const Auth = () => {
                           <LogIn className="mr-2 h-4 w-4" />
                           {authLoading ? "Signing in..." : "Sign In"}
                         </>
-                      ) : (
+                      ) : mode === 'signup' ? (
                         <>
                           <UserPlus className="mr-2 h-4 w-4" />
                           {authLoading ? "Creating account..." : "Create Account"}
+                        </>
+                      ) : (
+                        <>
+                          <Lock className="mr-2 h-4 w-4" />
+                          {authLoading ? "Resetting..." : "Reset Password"}
                         </>
                       )}
                     </Button>
@@ -269,18 +337,33 @@ const Auth = () => {
                 </form>
               </Form>
 
-              <div className="text-center">
-                <Button
-                  type="button"
-                  variant="link"
-                  onClick={() => toggleMode(mode === 'signin' ? 'signup' : 'signin')}
-                  disabled={authLoading}
-                >
-                  {mode === 'signin'
-                    ? "Don't have an account? Sign up"
-                    : 'Already have an account? Sign in'}
-                </Button>
-              </div>
+              {(mode === 'signin' || mode === 'signup') && (
+                <div className="text-center">
+                  <Button
+                    type="button"
+                    variant="link"
+                    onClick={() => toggleMode(mode === 'signin' ? 'signup' : 'signin')}
+                    disabled={authLoading}
+                  >
+                    {mode === 'signin'
+                      ? "Don't have an account? Sign up"
+                      : 'Already have an account? Sign in'}
+                  </Button>
+                </div>
+              )}
+              
+              {mode === 'reset-password' && (
+                <div className="text-center">
+                  <Button
+                    type="button"
+                    variant="link"
+                    onClick={() => toggleMode('signin')}
+                    disabled={authLoading}
+                  >
+                    Back to Sign In
+                  </Button>
+                </div>
+              )}
             </>
           )}
         </div>

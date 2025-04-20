@@ -10,5 +10,8 @@
     { "src": "/(.*)\\.jpg$", "dest": "/$1.jpg" },
     { "src": "/(.*)\\.ico$", "dest": "/$1.ico" },
     { "src": "/(.*)", "dest": "/index.html" }
+  ],
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

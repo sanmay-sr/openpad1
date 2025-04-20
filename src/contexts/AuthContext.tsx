@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session, User } from '@supabase/supabase-js';
@@ -148,8 +149,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const resetPassword = async (email: string) => {
     try {
       setIsLoading(true);
+      // Get the current URL - this should be the deployed URL, not localhost
       const currentUrl = window.location.origin;
-      
+      // Use the current URL for redirecting after password reset
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${currentUrl}/auth?type=reset`,
       });
@@ -157,6 +159,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) throw error;
       toast.success("Password reset instructions sent to your email");
     } catch (error: any) {
+      console.error("Password reset error:", error);
       toast.error(error.message || "Failed to send reset instructions");
       throw error;
     } finally {
