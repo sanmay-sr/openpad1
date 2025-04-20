@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session, User } from '@supabase/supabase-js';
@@ -30,12 +29,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isAuthenticated = !!user;
 
   useEffect(() => {
-    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       
-      // Check email verification status
       if (session?.user) {
         checkEmailVerification(session.user);
         fetchProfile(session.user.id);
@@ -44,7 +41,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     });
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setSession(session);
@@ -67,7 +63,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const checkEmailVerification = (user: User) => {
-    // Supabase stores email verification status in user metadata
     setIsEmailVerified(user.email_confirmed_at !== null);
   };
 
@@ -95,7 +90,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (error) throw error;
       
-      // Check email verification after login
       if (data?.user && data.user.email_confirmed_at === null) {
         toast.warning('Please verify your email address to fully access the application');
       } else {
@@ -103,7 +97,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (error: any) {
       toast.error(error.message || 'Error signing in');
-      throw error; // Rethrow so the UI can handle it
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -121,12 +115,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       
       if (error) {
-        // Enhanced error logging for debugging
         console.error('Signup error:', error);
         throw error;
       }
 
-      // Check if the user already exists
       if (data?.user && data.user.identities && data.user.identities.length === 0) {
         throw new Error('User already registered with this email address');
       }
@@ -134,7 +126,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       toast.success('Sign up successful! Please check your email for verification.');
     } catch (error: any) {
       toast.error(error.message || 'Error signing up');
-      throw error; // Rethrow to allow the Auth component to handle it
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -156,8 +148,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const resetPassword = async (email: string) => {
     try {
       setIsLoading(true);
+      const currentUrl = window.location.origin;
+      
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth?type=reset`,
+        redirectTo: `${currentUrl}/auth?type=reset`,
       });
       
       if (error) throw error;

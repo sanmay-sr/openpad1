@@ -5,9 +5,9 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Mail } from "lucide-react"
-import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
 import { forgotPasswordSchema } from "@/lib/auth-schema"
+import { useAuth } from "@/contexts/AuthContext"
 import {
   Form,
   FormControl,
@@ -23,6 +23,7 @@ interface ForgotPasswordProps {
 
 export const ForgotPassword = ({ onBack }: ForgotPasswordProps) => {
   const [isLoading, setIsLoading] = useState(false)
+  const { resetPassword } = useAuth()
   
   const form = useForm({
     resolver: zodResolver(forgotPasswordSchema),
@@ -34,12 +35,7 @@ export const ForgotPassword = ({ onBack }: ForgotPasswordProps) => {
   const onSubmit = async (values: { email: string }) => {
     try {
       setIsLoading(true)
-      const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
-        redirectTo: `${window.location.origin}/auth?type=reset`,
-      })
-      
-      if (error) throw error
-      
+      await resetPassword(values.email)
       toast.success("Password reset instructions sent to your email")
       onBack()
     } catch (error: any) {
