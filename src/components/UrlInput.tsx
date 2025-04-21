@@ -67,11 +67,8 @@ export const UrlInput: React.FC<UrlInputProps> = ({
   };
 
   const getPrefix = () => {
-    if (process.env.NODE_ENV === 'development') {
-      return 'openpad.io/';
-    }
-    const origin = window.location.origin;
-    return origin.replace(/^https?:\/\//, '') + '/';
+    // Always use the production domain
+    return 'openpadz.vercel.app/';
   };
 
   return (
