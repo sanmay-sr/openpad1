@@ -13,9 +13,10 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { InfoIcon } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { loginSchema, signupSchema, resetPasswordSchema } from '@/lib/auth-schema';
+import { loginSchema, signupSchema, resetPasswordSchema, forgotPasswordSchema } from '@/lib/auth-schema';
 import { ForgotPassword } from '@/components/auth/ForgotPassword';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import {
   Form,
   FormControl,
