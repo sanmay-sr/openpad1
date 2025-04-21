@@ -67,8 +67,8 @@ export const UrlInput: React.FC<UrlInputProps> = ({
   };
 
   const getPrefix = () => {
-    // Always use the production domain
-    return 'openpadz.vercel.app/';
+    // Always use the correct production domain for the deployed version
+    return 'open-pad.vercel.app/';
   };
 
   return (
