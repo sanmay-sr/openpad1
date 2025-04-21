@@ -94,7 +94,7 @@
   }
 
   body {
-    @apply bg-[#222] text-white font-sans antialiased;
+    @apply bg-background text-foreground font-sans antialiased;
   }
   
   ::selection {
@@ -159,15 +159,15 @@
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-[#23262a] rounded-full;
+  @apply bg-secondary/30 rounded-full;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-white/10 rounded-full transition-colors;
+  @apply bg-muted-foreground/20 rounded-full transition-colors;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-white/20;
+  @apply bg-muted-foreground/30;
 }
 
 /* Page transitions */
@@ -204,12 +204,5 @@
   
   .glassmorphism {
     @apply backdrop-blur-sm;
-  }
-}
-
-@media (min-width: 768px) {
-  body {
-    background: #222 url('/lovable-uploads/089be0ad-eaca-4c52-9952-e587dcea9949.png') no-repeat right bottom fixed;
-    background-size: 14vw;
   }
 }

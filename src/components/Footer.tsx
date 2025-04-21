@@ -17,13 +17,10 @@ export const Footer: React.FC<FooterProps> = ({ className }) => {
       )}
     >
       <div className="container flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-        <div className="flex items-center gap-2">
-          <img src="/lovable-uploads/9cd142a6-d1cc-41db-a20a-f419772b0b0e.png"
-               className="h-5 w-5 rounded-full bg-[#23262a]"
-               alt="Ghostpadz ghost logo"
-          />
-          <p>© {new Date().getFullYear()} <strong>Ghostpadz</strong>. All rights reserved.</p>
+        <div>
+          <p>© {new Date().getFullYear()} OpenPad. All rights reserved.</p>
         </div>
+        
         <div className="flex items-center gap-6">
           <a 
             href="#" 

@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { animations } from "@/utils/animations";
 import { Button } from "@/components/Button";
-import { User, Moon, Sun, LogOut, LayoutDashboard } from "lucide-react";
+import { FileText, User, Moon, Sun, LogOut } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -28,14 +28,9 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
         to="/" 
         className={cn("flex items-center gap-2", animations.fadeIn())}
       >
-        <img
-          src="/lovable-uploads/9cd142a6-d1cc-41db-a20a-f419772b0b0e.png"
-          alt="Ghostpadz Logo"
-          className="h-8 w-8 rounded-full bg-[#222] shadow hover:scale-105 transition-transform"
-          style={{ objectFit: "cover", background: "#23262a" }}
-        />
-        <span className="text-xl font-semibold tracking-tight hover:text-primary transition-colors duration-200 font-mono">
-          Ghost<span className="font-bold text-primary">Padz</span>
+        <FileText className="h-6 w-6 text-primary" />
+        <span className="text-xl font-semibold tracking-tight hover:text-primary transition-colors duration-200">
+          OpenPad
         </span>
         <div className="hidden sm:block">
           <span className="text-xs px-2 py-0.5 ml-2 rounded-full bg-secondary text-muted-foreground">
@@ -50,7 +45,6 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
           size="sm"
           onClick={toggleTheme}
           className="w-9 px-0"
-          aria-label="Toggle dark mode"
         >
           {theme === 'light' ? (
             <Moon className="h-4 w-4" />
@@ -67,7 +61,7 @@ export const Header: React.FC<HeaderProps> = ({ className }) => {
               onClick={() => navigate('/dashboard')}
               className="gap-2"
             >
-              <LayoutDashboard className="h-4 w-4" />
+              <User className="h-4 w-4" />
               <span>Dashboard</span>
             </Button>
             <Button 
