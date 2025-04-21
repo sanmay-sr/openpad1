@@ -149,7 +149,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const resetPassword = async (email: string) => {
     try {
       setIsLoading(true);
-      // Get the current URL - this should be the deployed URL, not localhost
+      // Get the current URL for redirecting after password reset
       const currentUrl = window.location.origin;
       // Use the current URL for redirecting after password reset
       const { error } = await supabase.auth.resetPasswordForEmail(email, {

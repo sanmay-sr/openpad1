@@ -97,31 +97,35 @@ export const updateNote = async (url: string, content: string): Promise<{ succes
 };
 
 export const parseContent = (content: string): { title: string; textContent: string; codeSnippets: CodeSnippet[] } => {
-  // This is a simple parser - in a real app you might want a more robust solution
+  // Improved parser for code snippets and content
   const codeSnippetRegex = /```(\w+)?\n([\s\S]*?)```/g;
   const codeSnippets: CodeSnippet[] = [];
+  let remainingText = content;
   let match;
   
-  // Extract code snippets
+  // Extract code snippets and remove them from content
   while ((match = codeSnippetRegex.exec(content)) !== null) {
     codeSnippets.push({
       id: Math.random().toString(36).substr(2, 9),
       language: match[1] || 'text',
       content: match[2].trim()
     });
+    
+    // We'll use this to get text without code blocks
+    remainingText = remainingText.replace(match[0], '');
   }
   
-  // Remove code snippets from content
-  const textContent = content.replace(codeSnippetRegex, '').trim();
+  // Trim the text content
+  remainingText = remainingText.trim();
   
   // Extract title from first line
-  const lines = textContent.split('\n');
+  const lines = remainingText.split('\n');
   const title = lines[0] || 'Untitled Note';
-  const remainingText = lines.slice(1).join('\n').trim();
+  const textContent = lines.slice(1).join('\n').trim();
   
   return {
     title,
-    textContent: remainingText,
+    textContent,
     codeSnippets
   };
 };
@@ -131,8 +135,15 @@ export const formatContentWithSnippets = (
   textContent: string,
   codeSnippets: CodeSnippet[]
 ): string => {
-  let formattedContent = title + '\n\n' + textContent;
+  // Start with the title
+  let formattedContent = title;
   
+  // Add text content if it exists (with padding)
+  if (textContent) {
+    formattedContent += '\n\n' + textContent;
+  }
+  
+  // Add each code snippet
   codeSnippets.forEach((snippet) => {
     formattedContent += `\n\n\`\`\`${snippet.language}\n${snippet.content}\n\`\`\``;
   });

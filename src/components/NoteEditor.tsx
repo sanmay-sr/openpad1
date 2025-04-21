@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { animations } from "@/utils/animations";
@@ -13,19 +14,21 @@ import { toast } from "sonner";
 interface NoteEditorProps {
   className?: string;
   initialContent?: string;
+  defaultCustomUrl?: string;
   onSave?: (url: string) => void;
 }
 
 export const NoteEditor: React.FC<NoteEditorProps> = ({ 
   className, 
   initialContent = "", 
+  defaultCustomUrl = "",
   onSave 
 }) => {
   const { isAuthenticated, profile } = useAuth();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [codeSnippets, setCodeSnippets] = useState<CodeSnippet[]>([]);
-  const [customUrl, setCustomUrl] = useState("");
+  const [customUrl, setCustomUrl] = useState(defaultCustomUrl);
   const [isReserved, setIsReserved] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(true);
@@ -51,13 +54,47 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
     }
   }, [content, isMobile]);
   
-  // Initialize with initial content if provided
+  // Parse initial content if provided
   useEffect(() => {
     if (initialContent) {
-      // In a real implementation, we would parse the content to extract title, text, and code snippets
-      setContent(initialContent);
+      // Parse the initial content to extract title, text, and code snippets
+      const { title: parsedTitle, textContent, codeSnippets: parsedSnippets } = parseContent(initialContent);
+      setTitle(parsedTitle || "");
+      setContent(textContent || "");
+      setCodeSnippets(parsedSnippets || []);
     }
   }, [initialContent]);
+  
+  // Parse content into title, text, and code snippets
+  const parseContent = (content: string) => {
+    const codeSnippetRegex = /```(\w+)?\n([\s\S]*?)```/g;
+    const parsedSnippets: CodeSnippet[] = [];
+    let match;
+    
+    // Extract code snippets
+    let remainingText = content;
+    while ((match = codeSnippetRegex.exec(content)) !== null) {
+      parsedSnippets.push({
+        id: generateId(),
+        language: match[1] || 'text',
+        content: match[2].trim()
+      });
+      
+      // Remove code snippets from the content
+      remainingText = remainingText.replace(match[0], '');
+    }
+    
+    // Extract title from first line
+    const lines = remainingText.trim().split('\n');
+    const parsedTitle = lines[0] || 'Untitled Note';
+    const parsedContent = lines.slice(1).join('\n').trim();
+    
+    return {
+      title: parsedTitle,
+      textContent: parsedContent,
+      codeSnippets: parsedSnippets
+    };
+  };
   
   const generateId = () => Math.random().toString(36).substr(2, 9);
   
@@ -91,9 +128,10 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
     if (!isAuthenticated) return false;
     if (!profile) return false;
     
-    // Check if the user has used all their reserved URLs for the week
+    // Check if the user has used all their reserved URLs
+    // Changed from "3 per week" to "2 active reserved notes"
     const reservedUrlsUsed = profile.reserved_urls_used || 0;
-    return reservedUrlsUsed < 3;
+    return reservedUrlsUsed < 2;
   };
   
   const handleSave = async () => {
@@ -250,7 +288,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
                 Reserve this URL (only you can edit)
                 {!canReserveUrl() && (
                   <span className="text-yellow-500 ml-1">
-                    (3 weekly limit reached)
+                    (2 active notes limit reached)
                   </span>
                 )}
               </label>
@@ -313,4 +351,3 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({
     </div>
   );
 };
-

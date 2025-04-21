@@ -9,6 +9,7 @@
     { "src": "/(.*)\\.png$", "dest": "/$1.png" },
     { "src": "/(.*)\\.jpg$", "dest": "/$1.jpg" },
     { "src": "/(.*)\\.ico$", "dest": "/$1.ico" },
+    { "src": "/auth/callback", "dest": "/index.html" },
     { "src": "/(.*)", "dest": "/index.html" }
   ],
   "rewrites": [

@@ -1,12 +1,36 @@
-import React from "react";
+
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { animations } from "@/utils/animations";
 import { Header } from "@/components/Header";
-import { NoteEditor } from "@/components/NoteEditor";
 import { Footer } from "@/components/Footer";
-import { FileText } from "lucide-react";
+import { FileText, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 const Index = () => {
+  const [customUrl, setCustomUrl] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!customUrl.trim()) {
+      toast.error("Please enter a custom URL");
+      return;
+    }
+    
+    // Format the URL (remove spaces, special characters, etc.)
+    const formattedUrl = customUrl.trim().replace(/\s+/g, "-").toLowerCase();
+    
+    // Navigate to the formatted URL
+    setIsSubmitting(true);
+    navigate(`/${formattedUrl}`);
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -22,13 +46,39 @@ const Index = () => {
             The simplest way to share text and code
           </h1>
           
-          <p className={cn("text-base md:text-xl text-muted-foreground", animations.fadeIn({ delay: 0.2 }))}>
+          <p className={cn("text-base md:text-xl text-muted-foreground mb-8", animations.fadeIn({ delay: 0.2 }))}>
             Create notes with custom URLs. Share code with syntax highlighting.
             <span className="hidden md:inline"> No signup required.</span>
           </p>
+          
+          <form 
+            onSubmit={handleSubmit}
+            className={cn("max-w-md mx-auto", animations.fadeIn({ delay: 0.3 }))}
+          >
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">
+                  {process.env.NODE_ENV === 'development' ? 'openpad.io/' : window.location.origin + '/'}
+                </span>
+                <Input
+                  type="text"
+                  value={customUrl}
+                  onChange={(e) => setCustomUrl(e.target.value.replace(/\s+/g, "-").toLowerCase())}
+                  className="pl-[120px]"
+                  placeholder="your-note-name"
+                  disabled={isSubmitting}
+                />
+              </div>
+              <Button type="submit" disabled={isSubmitting}>
+                <ArrowRight className="h-4 w-4 md:mr-2" />
+                <span className="hidden md:inline">Go</span>
+              </Button>
+            </div>
+            <p className="mt-2 text-xs text-center text-muted-foreground">
+              Enter a custom URL to access or create a new note
+            </p>
+          </form>
         </div>
-        
-        <NoteEditor className={animations.slideUp({ delay: 0.3 })} />
       </main>
       
       <Footer />
