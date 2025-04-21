@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,7 +8,10 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import NotePage from "./pages/NotePage";
 import Auth from "./pages/Auth";
-import Dashboard from "./pages/Dashboard"; // Added this import
+import Dashboard from "./pages/Dashboard";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
+import Contact from "./pages/Contact";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -50,6 +52,9 @@ const App = () => {
                 {/* Public routes accessible without authentication */}
                 <Route path="/" element={<Index />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/terms" element={<Terms />} />
+                <Route path="/privacy" element={<Privacy />} />
+                <Route path="/contact" element={<Contact />} />
                 <Route path="/:noteUrl" element={<NotePage />} />
                 
                 {/* Protected routes that require authentication */}

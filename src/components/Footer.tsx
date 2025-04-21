@@ -1,5 +1,5 @@
-
 import React from "react";
+import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { animations } from "@/utils/animations";
 
@@ -22,24 +22,24 @@ export const Footer: React.FC<FooterProps> = ({ className }) => {
         </div>
         
         <div className="flex items-center gap-6">
-          <a 
-            href="#" 
+          <Link 
+            to="/terms" 
             className="hover:text-foreground transition-colors duration-200"
           >
             Terms
-          </a>
-          <a 
-            href="#" 
+          </Link>
+          <Link 
+            to="/privacy" 
             className="hover:text-foreground transition-colors duration-200"
           >
             Privacy
-          </a>
-          <a 
-            href="#" 
+          </Link>
+          <Link 
+            to="/contact" 
             className="hover:text-foreground transition-colors duration-200"
           >
             Contact
-          </a>
+          </Link>
         </div>
       </div>
     </footer>
